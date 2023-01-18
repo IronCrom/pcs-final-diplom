@@ -20,7 +20,7 @@ public class BooleanSearchEngine implements SearchEngine {
                 String text = PdfTextExtractor.getTextFromPage(doc.getPage(i));
                 String[] words = text.split("\\P{IsAlphabetic}+");
                 Map<String, Integer> wordsCount = new HashMap<>();
-                for (var word : words) {
+                for (String word : words) {
                     if (word.isEmpty()) {
                         continue;
                     }
@@ -64,8 +64,8 @@ public class BooleanSearchEngine implements SearchEngine {
                     if (sortedIndex.isEmpty()) {
                         sortedIndex.addAll(search(word));
                     } else {
-                        List<PageEntry> index2 = search(word);
-                        index2.forEach(indexEntry -> {
+                        List<PageEntry> searchIndex = search(word);
+                        searchIndex.forEach(indexEntry -> {
                                     if (sortedIndex.contains(indexEntry)) {
                                         PageEntry pageEntry = sortedIndex.get(sortedIndex.indexOf(indexEntry));
                                         sortedIndex.set(sortedIndex.indexOf(indexEntry), pageEntry.countSum(indexEntry));
