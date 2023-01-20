@@ -37,6 +37,7 @@ public class BooleanSearchEngine implements SearchEngine {
                     } else {
                         pageEntryList.add(pageEntry);
                     }
+                    Collections.sort(pageEntryList);
                     index.put(word, pageEntryList);
                 });
             }
@@ -45,14 +46,7 @@ public class BooleanSearchEngine implements SearchEngine {
 
     @Override
     public List<PageEntry> search(String word) {
-        word = word.toLowerCase();
-        if (index.get(word) == null) {
-            return Collections.emptyList();
-        } else {
-            List<PageEntry> sortedIndex = index.get(word);
-            Collections.sort(sortedIndex);
-            return sortedIndex;
-        }
+        return index.getOrDefault(word.toLowerCase(), Collections.emptyList());
     }
 
     public List<PageEntry> searchRequest(String request, String stopListFileName) throws IOException {
@@ -60,23 +54,21 @@ public class BooleanSearchEngine implements SearchEngine {
         List<String> stopWords = Files.readAllLines(Paths.get(stopListFileName));
         words.removeIf(word -> stopWords.contains(word.toLowerCase()));
         List<PageEntry> sortedIndex = new ArrayList<>();
-        words.forEach(word -> {
-                    if (sortedIndex.isEmpty()) {
-                        sortedIndex.addAll(search(word));
+        for (String word : words) {
+            if (sortedIndex.isEmpty()) {
+                sortedIndex.addAll(search(word));
+            } else {
+                List<PageEntry> searchIndex = search(word);
+                for (PageEntry indexEntry : searchIndex) {
+                    if (sortedIndex.contains(indexEntry)) {
+                        PageEntry pageEntry = sortedIndex.get(sortedIndex.indexOf(indexEntry));
+                        sortedIndex.set(sortedIndex.indexOf(indexEntry), pageEntry.countSum(indexEntry));
                     } else {
-                        List<PageEntry> searchIndex = search(word);
-                        searchIndex.forEach(indexEntry -> {
-                                    if (sortedIndex.contains(indexEntry)) {
-                                        PageEntry pageEntry = sortedIndex.get(sortedIndex.indexOf(indexEntry));
-                                        sortedIndex.set(sortedIndex.indexOf(indexEntry), pageEntry.countSum(indexEntry));
-                                    } else {
-                                        sortedIndex.add(indexEntry);
-                                    }
-                                }
-                        );
+                        sortedIndex.add(indexEntry);
                     }
                 }
-        );
+            }
+        }
         Collections.sort(sortedIndex);
         return sortedIndex;
     }
